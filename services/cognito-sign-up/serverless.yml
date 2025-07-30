@@ -21,28 +21,28 @@ provider:
 functions:
   cognitoSignUp:
     handler: handlers/cognito_sign_up.handler
-    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodelayer:4
+    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodeLayer:1
     events:
       - http:
           path: cognito-sign-up
           method: post
   cognitoSignIn:
     handler: handlers/cognito_sign_in.handler
-    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodelayer:4
+    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodeLayer:1
     events:
       - http:
           path: cognito-sign-in
           method: post
   authenticate:
     handler: handlers/authenticate_api.handler
-    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodelayer:4
+    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodeLayer:1
     events:
       - http:
           path: auth
           method: get
   hello:
     handler: handlers/hello.handler
-    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodelayer:4
+    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodeLayer:1
     events:
       - http:
           path: hello

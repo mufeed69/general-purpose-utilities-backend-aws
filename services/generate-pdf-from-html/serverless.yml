@@ -9,7 +9,7 @@ provider:
 functions:
   generatePdfFromHtml:
     handler: handlers/generate_pdf_from_html.handler
-    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodelayer:4
+    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodeLayer:1
     events:
       - http:
           path: generate-pdf

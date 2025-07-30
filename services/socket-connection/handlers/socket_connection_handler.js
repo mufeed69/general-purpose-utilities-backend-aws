@@ -7,33 +7,27 @@ const api_gateway_client = new ApiGatewayManagementApiClient({
     endpoint: process.env.EMIT_ENDPOINT,
 })
 
-const user = {
-
-} 
-
-const connection = {
-
-}
+const user = {}       // userId => connectionId
+const connection = {} // connectionId => userId
 
 async function postToConnected(currentConnectionId, payload) {
-    // Iterate over all user IDs
-    for (const userId in user) {
-        if (user.hasOwnProperty(userId)) {
-            const connectionId = connection[userId]
+    console.log('Connected users:', user)
 
-            // Skip the current user's connection ID
+    for (const userId in user) {
+        if (Object.hasOwnProperty.call(user, userId)) {
+            const connectionId = user[userId]
+
             if (connectionId !== currentConnectionId && connectionId) {
                 const command = new PostToConnectionCommand({
-                    Data: JSON.stringify(payload),
+                    Data: Buffer.from(JSON.stringify(payload)),
                     ConnectionId: connectionId,
                 })
 
                 try {
-                    // Send the message to the connection
                     await api_gateway_client.send(command)
                     console.log(`Message sent to connection: ${connectionId}`)
                 } catch (error) {
-                    console.error(`Failed to send message to connection: ${connectionId}`, error)
+                    console.error(`Failed to send to connection ${connectionId}:`, error)
                 }
             }
         }
@@ -42,45 +36,59 @@ async function postToConnected(currentConnectionId, payload) {
 
 module.exports.handler = async (event) => {
     try {
+        console.log('Incoming event:', JSON.stringify(event))
+
         const { routeKey, connectionId } = event.requestContext
 
         if (routeKey === '$connect') {
-            // Store connection session information
-            user[event.queryStringParameters.user_id] = connectionId
-            connection[connectionId] = event.queryStringParameters.user_id
+            const userId = event.queryStringParameters?.user_id
+            if (!userId) {
+                return {
+                    statusCode: 400,
+                    body: 'Missing user_id query parameter',
+                }
+            }
+
+            user[userId] = connectionId
+            connection[connectionId] = userId
+
+            console.log(`🔌 User ${userId} connected with ID ${connectionId}`)
+
             return {
                 statusCode: 200,
-                body: JSON.stringify('Connection established successfully'),
+                body: 'Connection established successfully',
             }
         }
 
         if (routeKey === '$disconnect') {
-            delete user[connection[connectionId]]
+            const userId = connection[connectionId]
+            delete user[userId]
+            delete connection[connectionId]
+            console.log(`User ${userId} disconnected`)
             return {
                 statusCode: 200,
-                body: JSON.stringify('Connection cleared successfully'),
+                body: 'Connection cleared successfully',
             }
         }
 
-        if (routeKey === 'broadcast-massage') {
-            const payload = JSON.parse(event.body)
+        if (routeKey === '$default') {
+            const payload = JSON.parse(event.body || '{}')
             await postToConnected(connectionId, payload)
             return {
                 statusCode: 200,
-                body: JSON.stringify('Connection cleared successfully'),
+                body: 'Message broadcasted',
             }
         }
 
-        // Handle other route keys if needed
         return {
-            statusCode: 200,
-            body: JSON.stringify('Invalid route'),
+            statusCode: 400,
+            body: 'Invalid route',
         }
     } catch (error) {
         console.error('Error in WebSocket handler:', error)
         return {
-            statusCode: 200,
-            body: JSON.stringify('There was an error while processing the connection'),
+            statusCode: 500,
+            body: 'Internal server error',
         }
     }
 }

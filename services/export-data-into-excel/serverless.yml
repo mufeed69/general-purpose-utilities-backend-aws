@@ -16,7 +16,7 @@ provider:
 functions:
   exportDataIntoExcel:
     handler: handlers/export_data_into_excel.handler
-    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodelayer:4
+    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodeLayer:1
     events:
       - http:
           path: get-excel
