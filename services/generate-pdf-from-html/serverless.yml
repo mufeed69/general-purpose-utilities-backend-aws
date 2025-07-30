@@ -1,0 +1,17 @@
+service: generate-pdf-from-html
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+            
+functions:
+  generatePdfFromHtml:
+    handler: handlers/generate_pdf_from_html.handler
+    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodelayer:4
+    events:
+      - http:
+          path: generate-pdf
+          method: post
+          cors: true

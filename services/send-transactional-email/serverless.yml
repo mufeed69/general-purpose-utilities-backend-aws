@@ -1,0 +1,37 @@
+service: ses-template-service
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1  # SES works fully in some specific regions
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ses:CreateTemplate
+            - ses:UpdateTemplate
+            - ses:DeleteTemplate
+            - ses:SendTemplatedEmail
+          Resource: "*"
+
+functions:
+  sendEmail:
+    handler: handlers/send_email.handler
+    events:
+      - http:
+          path: send
+          method: post
+          cors: true
+
+resources:
+  Resources:
+    MySESTemplate:
+      Type: AWS::SES::Template
+      Properties:
+        Template:
+          TemplateName: MyTemplate
+          SubjectPart: "Hello {{name}}"
+          HtmlPart: ${file(./ses-templates/template.html)}

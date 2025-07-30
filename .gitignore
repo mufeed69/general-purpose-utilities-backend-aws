@@ -1,0 +1,4 @@
+node_modules
+nodejs.zip
+package-lock.json
+.serverless

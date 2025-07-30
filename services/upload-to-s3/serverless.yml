@@ -1,0 +1,28 @@
+service: s3-uploader
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+  environment:
+    UPLOAD_BUCKET: mufeed-s3-bucket
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+          Resource:
+            - arn:aws:s3:::mufeed-s3-bucket/*
+            
+functions:
+  uploadToS3:
+    handler: handlers/upload_s3.handler
+    events:
+      - http:
+          path: upload
+          method: post
+          cors: true
+

@@ -1,0 +1,87 @@
+service: cognito-sign-up
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+  environment:
+    USER_POOL_ID:
+      Ref: CognitoUserPool
+    USER_POOL_CLIENT_ID:
+      Ref: CognitoUserPoolClient
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - cognito-idp:*
+          Resource: "*"
+
+functions:
+  cognitoSignUp:
+    handler: handlers/cognito_sign_up.handler
+    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodelayer:4
+    events:
+      - http:
+          path: cognito-sign-up
+          method: post
+  cognitoSignIn:
+    handler: handlers/cognito_sign_in.handler
+    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodelayer:4
+    events:
+      - http:
+          path: cognito-sign-in
+          method: post
+  authenticate:
+    handler: handlers/authenticate_api.handler
+    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodelayer:4
+    events:
+      - http:
+          path: auth
+          method: get
+  hello:
+    handler: handlers/hello.handler
+    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodelayer:4
+    events:
+      - http:
+          path: hello
+          method: get
+          authorizer:
+            arn: arn:aws:cognito-idp:ap-south-1:625209709588:userpool/ap-south-1_JEv0ZvyXP
+
+resources:
+  Resources:
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: my-user-pool
+        AutoVerifiedAttributes:
+          - email
+        UsernameAttributes:
+          - email
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireUppercase: true
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: false
+        MfaConfiguration: OFF
+        Schema:
+          - Name: email
+            Required: true
+            Mutable: true
+
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: my-user-pool-client
+        UserPoolId:
+          Ref: CognitoUserPool
+        GenerateSecret: false
+        ExplicitAuthFlows:
+          - ALLOW_USER_PASSWORD_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+          - ALLOW_USER_SRP_AUTH
+        PreventUserExistenceErrors: ENABLED

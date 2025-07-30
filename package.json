@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "pdfkit": "^0.17.1",
+    "serverless": "^3.40.0"
+  }
+}

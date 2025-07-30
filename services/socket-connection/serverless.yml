@@ -1,0 +1,43 @@
+service: socket-connection
+frameworkVersion: "3"
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+  websocketsApiName: my-socket-connection
+  websocketsApiRouteSelectionExpression: $request.body.action # custom routes are selected by the value of the action property in the body
+  websocketsDescription: My Serverless Socket API 
+  environment:
+    EMIT_ENDPOINT: 
+        Fn::Join:
+          - ""
+          - - "https://"
+            - Ref: WebsocketsApi
+            - ".execute-api."
+            - Ref: AWS::Region
+            - ".amazonaws.com/"
+            - "dev"
+
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - lambda:*
+            - execute-api:*
+          Resource: "*"
+
+functions:
+  socket-connections-handler:
+    handler: handlers/socket_connection_handler.handler
+    events:
+      - websocket:
+          route: $connect
+      - websocket:
+          route: $disconnect
+      - websocket:
+          route: $default
+      - websocket:
+          route: broadcast-massage

@@ -1,0 +1,17 @@
+service: generate-presigned-url
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+            
+functions:
+  generatePresignedUrl:
+    handler: handlers/generate_presigned_url.handler
+    events:
+      - http:
+          path: generate-presigned
+          method: post
+          cors: true
+

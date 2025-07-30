@@ -1,0 +1,61 @@
+service: async-job-processor  # Name of the service (application)
+
+provider:
+  name: aws  # The cloud provider (AWS in this case)
+  runtime: nodejs20.x  # Node.js runtime for Lambda functions
+  region: ap-south-1  # The AWS region where the resources will be deployed (Asia Pacific - Mumbai)
+
+  # IAM role statements to define permissions for Lambda functions
+  iamRoleStatements:
+    # Permission for the 'sendToQueue' Lambda to send messages to the SQS queue
+    - Effect: Allow  # Allow the action
+      Action:
+        - sqs:SendMessage  # Allow sending messages to SQS
+      Resource:
+        - !GetAtt MyQueue.Arn  # Reference the ARN of the SQS queue to allow send access to that queue
+    
+    # Permissions for the 'processQueue' Lambda to interact with the SQS queue
+    - Effect: Allow  # Allow the action
+      Action:
+        - sqs:ReceiveMessage  # Allow receiving messages from the queue
+        - sqs:DeleteMessage  # Allow deleting messages from the queue once processed
+        - sqs:GetQueueAttributes  # Allow getting queue attributes (e.g., visibility timeout)
+      Resource:
+        - !GetAtt MyQueue.Arn  # Reference the ARN of the SQS queue to allow receive/delete permissions for the queue
+
+# Functions section where we define our Lambda functions
+functions:
+  # Lambda function to send messages to the SQS queue
+  sendToQueue:
+    handler: handlers/send_to_queue.handler  # Define the handler method (from file `handlers/send_to_queue.js`)
+    events:
+      # Event trigger from API Gateway (HTTP request) when someone sends a POST request to `/send-job`
+      - http:
+          path: send-job  # Define the path for the API Gateway
+          method: post  # Use the HTTP POST method to trigger the Lambda function
+          cors: true  # Enable CORS for cross-origin requests (if using from a browser)
+    environment:
+      # Define an environment variable for the queue URL dynamically
+      QUEUE_URL: !Ref MyQueue  # Use the CloudFormation reference to the SQS queue for its URL
+
+  # Lambda function to process messages from the SQS queue
+  processQueue:
+    handler: handlers/process_queue.handler  # Define the handler method (from file `handlers/process_queue.js`)
+    events:
+      # Trigger this Lambda from SQS whenever there are new messages in the queue
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - MyQueue  # Reference the `MyQueue` resource defined below
+              - Arn  # Get the ARN (Amazon Resource Name) of the SQS queue for the event trigger
+          batchSize: 5  # Process messages in batches of 5 at a time (optimize the Lambda's processing capacity)
+          enabled: true  # Enable the event source mapping (Lambda will be triggered on new SQS messages)
+
+# Resources section where we define other AWS resources (like SQS Queue)
+resources:
+  Resources:
+    # Define the SQS queue resource
+    MyQueue:
+      Type: AWS::SQS::Queue  # Define this resource as an SQS queue
+      Properties:
+        QueueName: my-sqs-queue  # Name of the SQS queue

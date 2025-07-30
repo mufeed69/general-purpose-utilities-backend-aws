@@ -1,0 +1,47 @@
+service: s3-file-processor
+
+provider:
+  name: aws
+  runtime: nodejs20.x  # Or use python3.9 for a Python Lambda
+  region: ap-south-1  # Your AWS region
+  environment:
+    TABLE_NAME: !Ref DataTable  # DynamoDB table name as an environment variable
+
+functions:
+  processFile:
+    handler: handlers/file_processer.handler  # The Lambda handler method
+    events:
+      - s3:
+          bucket: my-csv-upload-bucket  # S3 bucket that will trigger the Lambda
+          event: s3:ObjectCreated:*  # Trigger the Lambda on object creation (file upload)
+          rules:
+            - suffix: .csv  # Only trigger for CSV files
+    environment:
+      DATABASE_TABLE: !Ref DataTable  # DynamoDB table name
+
+resources:
+  Resources:
+    # S3 Bucket to store CSV files
+    CsvBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: my-csv-upload-bucket  # Name of the S3 bucket
+
+    # DynamoDB Table to store the parsed data from the CSV file
+    DataTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: FileData
+        AttributeDefinitions:
+          - AttributeName: "jobId"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "jobId"
+            KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+
+plugins:
+  - serverless-offline  # Optional, to test offline
+
