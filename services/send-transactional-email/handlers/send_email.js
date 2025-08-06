@@ -10,6 +10,17 @@ module.exports.handler = async (event) => {
   try {
     const { email, name } = JSON.parse(event.body);
 
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!email || !name || !regex.test(email)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          message: 'Bad request!',
+        }),
+      };
+    }
+
     const templateData = {
       name,
     };

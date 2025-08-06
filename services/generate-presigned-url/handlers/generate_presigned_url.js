@@ -5,9 +5,9 @@ const s3 = new S3Client({ region: 'ap-south-1' }); // or use process.env.AWS_REG
 
 exports.handler = async (event) => {
   try {
-    const { bucketName, objectKey, expiresInSeconds = 300 } = JSON.parse(event.body || '{}');
+    const { objectKey, expiresInSeconds = 300 } = JSON.parse(event.body || '{}');
 
-    if (!bucketName || !objectKey) {
+    if (!objectKey) {
       return {
         statusCode: 400,
         body: JSON.stringify({ message: 'Missing bucketName or objectKey' }),
@@ -15,7 +15,7 @@ exports.handler = async (event) => {
     }
 
     const command = new GetObjectCommand({
-      Bucket: bucketName,
+      Bucket: "mufeed-s3-bucket",
       Key: objectKey,
     });
 

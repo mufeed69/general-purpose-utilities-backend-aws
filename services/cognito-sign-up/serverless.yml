@@ -35,7 +35,7 @@ functions:
           method: post
   authenticate:
     handler: handlers/authenticate_api.handler
-    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodeLayer:1
+    layers: arn:aws:lambda:ap-south-1:625209709588:layer:nodeLayer2:2
     events:
       - http:
           path: auth
